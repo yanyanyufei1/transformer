@@ -40,12 +40,12 @@ class MultiHeadAttention(nn.Module):
             attention_scores += padding_mask *-1e9
 
 
-        attention_probs = torch.softmax(attention_scores, dim=-1)
-        attention_probs = self.dropout(attention_probs)
+        attention_weights = torch.softmax(attention_scores, dim=-1)
+        attention_weights = self.dropout(attention_weights)
 
         # 计算注意力输出， 通过注意力概率加权值
         #（bs, num_heads, seq_len, seq_len）* （bs, num_heads, seq_len, head_dim）= （bs, num_heads, seq_len, head_dim)
-        output = torch.matmul(attention_probs, value_states)
+        output = torch.matmul(attention_weights, value_states)
 
         # 对多头注意力输出进行拼接，将形状调整为（bs, batch）
         output = output.transpose(1, 2).contiguous().view(bs, seq_len, self.head_dim * self.num_heads)
@@ -63,6 +63,6 @@ if __name__ == "__main__":
 
     # 生成因果掩码（三角矩阵）
     causal_mask = torch.triu(torch.ones(batch_size,seq_len), diagonal=1).bool()
-    mda = MultiHeadAttention(hidden_size, num_heads, attention_dropout)
-    output = mda(hidden_state)
+    mha = MultiHeadAttention(hidden_size, num_heads, attention_dropout)
+    output = mha(hidden_state)
     print(output.size())
